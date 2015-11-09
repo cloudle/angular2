@@ -1,7 +1,7 @@
 <h1>My 2nd Angular2 {{name}} app!</h1>
 
-<input #app-name [value]="name" />
+<input type="text" #name-input [value]="name" (keyup)="changeName($event)" />
 
-<h1>{{appName.value}}</h1>
+<h1>{{nameInput.value}}</h1>
 
 <div *ng-for="#num of nums" (click)="onClick()">{{num}}</div>
