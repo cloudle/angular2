@@ -1,5 +1,7 @@
 <h1>My 2nd Angular2 {{name}} app!</h1>
 
-<input [value]="name"/>
+<input #app-name [value]="name" />
 
-<div *ng-for="#num of nums">{{num}}</div>
+<h1>{{appName.value}}</h1>
+
+<div *ng-for="#num of nums" (click)="onClick()">{{num}}</div>
