@@ -12,6 +12,7 @@ var gulp = require('gulp'),
   nodemon = require('gulp-nodemon'),
   browserify = require('browserify'),
   coffeeify = require('coffeeify'),
+  tsify = require('tsify'),
   watchify = require('watchify'),
   uglify = require('gulp-uglify'),
   buffer = require('vinyl-buffer'),
@@ -26,7 +27,7 @@ var gulp = require('gulp'),
 
 var paths= {
   styles:  ['./app/**/*.styl'],
-  templates: ['./app/**/*.jade', './server/views/home.jade'],
+  templates: ['./app/**/*.html'],
   scripts: ['./app/scripts/**/*.coffee']
 };
 
@@ -37,12 +38,10 @@ function mapError(err) {
       + chalk.yellow(err.fileName.replace(__dirname, ''))
       + ': '
       + 'Line '
-      + chalk.magenta(err.lineNumber)
-      + ' & '
-      + 'Column '
+      + chalk.magenta(err.lineNumber || err.line + ',')
       + chalk.magenta(err.columnNumber || err.column)
       + ': '
-      + chalk.blue(err.description))
+      + chalk.blue(err.description || err.message))
   } else {
     gutil.log(chalk.red(err.name)
       + ': '
@@ -66,6 +65,18 @@ function watchifyBuilder(compressor, entryPoint, filename, options, uglifyDisabl
     bundleScript(bundler, filename, uglifyDisable);
   }).on('log', mapLog)
 }
+
+gulp.task('tsify', function () {
+  var bundler = browserify({
+    entries: ['./app/scripts/main.ts'],
+    cache: {}, packageCache: {},
+    plugin: [watchify, tsify]
+  });
+  bundleScript(bundler, 'ts-bundle.js');
+  bundler.on('update', function () {
+    bundleScript(bundler, 'ts-bundle.js');
+  }).on('log', mapLog);
+});
 
 function bundleScript(bundler, filename, uglifyDisable) {
   return bundler.bundle()
@@ -91,7 +102,7 @@ gulp.task('style-bundle', function() {
 
 gulp.task('template-bundle', function() {
   gulp.src(paths.templates)
-    .pipe(jade())
+    //.pipe(jade())
     .pipe(gulp.dest('assets'))
     .pipe(browserSync.stream());
 });
@@ -105,7 +116,7 @@ gulp.task('browser-sync', ['nodemon'], function() {
   });
 
   gulp.watch("./app/**/*.styl", ['style-bundle']);
-  gulp.watch("./app/templates/**/*.jade", ['template-bundle']);
+  gulp.watch("./app/templates/**/*.html", ['template-bundle']);
 });
 
 var nodemonIgnores = ['app/**/*', 'assets/**/*'];
@@ -116,4 +127,4 @@ gulp.task('nodemon', function (callback) {
   });
 });
 
-gulp.task('default', ['style-bundle', 'template-bundle', 'coffeeify', 'browser-sync']);
+gulp.task('default', ['style-bundle', 'template-bundle', 'tsify', 'coffeeify', 'browser-sync']);
